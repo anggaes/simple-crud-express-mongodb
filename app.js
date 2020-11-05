@@ -2,7 +2,10 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const express = require('express');
+const morgan = require('morgan');
+const logger = require('./src/common/logger');
 
+const contextPath = process.env.CONTEXT_PATH || '';
 const app = express();
 
 // Configuring App
@@ -15,15 +18,49 @@ app.options('*', cors());
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 // const db = mongoose.connection;
 
+// Request logging
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev', { stream: logger.streamDebug }));
+} else if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('common', { skip: (req, res) => res.statusCode < 400, stream: logger.streamError }));
+  app.use(morgan('common', { skip: (req, res) => res.statusCode > 400, stream: logger.streamInfo }));
+}
+
+// app.use((req, res, next) => {
+//   if (res.statusCode < 200) {
+//     logger.info(
+//       `${req.method
+//       } ${
+//         req.url
+//       } - req = ${
+//         JSON.stringify(req.body)
+//       }, res = ${
+//         JSON.stringify(res.body)}`,
+//     );
+//   } else {
+//     logger.info(
+//       `${req.method
+//       } ${
+//         req.url
+//       } - req = ${
+//         JSON.stringify(req.body)
+//       }, res = ${
+//         JSON.stringify(res.body)}`,
+//     );
+//   }
+//   next();
+// });
+
 // Routes (START)
-app.use('/scorecard', require('./src/routes/ScorecardRoutes').instance);
+app.use(`${contextPath}/scorecard`, require('./src/routes/ScorecardRoutes').instance);
 // Routes (END)
 
 // Error Handler
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // log file
-  console.log(`${req.method} ${req.url} - ${err.stack}`);
+  // logger.debug(`${req.method} ${req.url} - ${err.stack}`);
+  // console.log(`${req.method} ${req.url} - ${err.stack}`);
 
   if (typeof err === 'string') {
     // custom application error
@@ -38,7 +75,7 @@ app.use((err, req, res, next) => {
 
   if (err.name === 'BadRequestError') {
     // bad request error
-    return res.status(400).json({ message: 'Please check field type and if any required field' });
+    return res.status(400).json({ message: err.message });
   }
 
   // default to 500 server error
