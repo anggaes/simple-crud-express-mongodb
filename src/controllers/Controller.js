@@ -47,6 +47,7 @@ class Controller {
 
   update() {
     return async (req, res, next) => {
+      console.log("HIT UPDATE");
       const props = {};
       let result = {};
       const errors = [];
@@ -163,7 +164,6 @@ class Controller {
 
   async setBadRequestFromJOI(errors = []) {
     const messages = [];
-    console.log('setBadRequestFromJOI');
 
     if (isProduction) {
       logger.info(JSON.stringify(errors));
@@ -173,20 +173,28 @@ class Controller {
 
     await errors.forEach((error) => {
       error.details.forEach((detail) => {
-        messages.push(detail.message.replace(/["']/g, ""));
+        messages.push(detail.message.replace(/["']/g, ''));
       });
     });
     return createError.BadRequest(messages);
   }
 
   errorHandler(error = {}) {
-    console.log('setError');
     if (isProduction) {
       logger.error(JSON.stringify(error));
     } else {
       logger.debug(JSON.stringify(error));
     }
     return createError.InternalServerError();
+  }
+
+  unauthorizedHandler(messages = {}) {
+    if (isProduction) {
+      logger.error(JSON.stringify(messages));
+    } else {
+      logger.debug(JSON.stringify(messages));
+    }
+    return createError.Unauthorized();
   }
 }
 

@@ -23,6 +23,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev', { stream: logger.streamDebug }));
 } else if (process.env.NODE_ENV === 'production') {
   app.use(morgan('common', { skip: (req, res) => res.statusCode < 400, stream: logger.streamError }));
+  app.use(morgan('common', { skip: (req, res) => res.statusCode < 400, stream: logger.streamError }));
   app.use(morgan('common', { skip: (req, res) => res.statusCode > 400, stream: logger.streamInfo }));
 }
 
@@ -51,8 +52,15 @@ if (process.env.NODE_ENV === 'development') {
 //   next();
 // });
 
+// app.use((req, res, next) => {
+//   console.log(req.url);
+//   console.log(req.method);
+//   return next();
+// });
+
 // Routes (START)
-app.use(`${contextPath}/scorecard`, require('./src/routes/ScorecardRoutes').instance);
+app.use(`${contextPath}/scorecard`, require('./src/routes/ScorecardRoutes'));
+app.use(`${contextPath}/user`, require('./src/routes/UserRoutes'));
 // Routes (END)
 
 // Error Handler

@@ -12,7 +12,6 @@ class Routes {
     this.getOne();
     this.update();
     this.deleteOne();
-    return this.router;
   }
 
   create() {
